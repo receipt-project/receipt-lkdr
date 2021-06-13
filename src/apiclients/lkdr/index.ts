@@ -1,16 +1,20 @@
 import axios, {AxiosInstance} from "axios";
 import SmsChallengeVerifyResponse from "@/apiclients/lkdr/SmsChallengeVerifyResponse";
 import lkdrLocalStorageRepository from "@/apiclients/lkdr/LkdrLocalStorageRepository";
+import LkdrUnauthorizedApiClient from "@/apiclients/lkdr/LkdrUnauthorizedApiClient";
+import {deviceInfo} from "@/apiclients/lkdr/LkdrApiClientCommons";
 
 type AuthStateChangedCallback = (auth: any) => void;
 
-class LkdrApiClient {
+class Lkdr {
 
   private token: string | null = lkdrLocalStorageRepository.token
   private refreshToken: string | null = lkdrLocalStorageRepository.refreshToken
   private authorized = !!this.token && !!this.refreshToken;
   private authInProgress = false;
   private onAuthStateChangedCallbacks: AuthStateChangedCallback[] = []
+
+  private lkdrUnauthorizedApiClient = new LkdrUnauthorizedApiClient()
 
   async auth() {
     const phone = lkdrLocalStorageRepository.phone || prompt("Your number (79XXXXXXXXX)", "") || ""
@@ -21,20 +25,20 @@ class LkdrApiClient {
 
     lkdrLocalStorageRepository.phone = phone;
 
-    const challengeStartResponse = await this.getUnauthorizedAxios().post("/api/v1/auth/challenge/sms/start", {phone})
-    const challengeToken = challengeStartResponse.data.challengeToken;
+    const challengeStartResponse = await this.lkdrUnauthorizedApiClient.auth.challenge.sms.start({phone})
+
+    const challengeToken = challengeStartResponse.challengeToken;
 
     const code: string | null = prompt("SMS Code")
+    if (!code) return
 
     try {
-      const challengeVerifyResponse = await this.getUnauthorizedAxios().post("/api/v1/auth/challenge/sms/verify", {
+      const data = await this.lkdrUnauthorizedApiClient.auth.challenge.sms.verify({
         challengeToken: challengeToken,
         phone: phone,
         code: code,
-        deviceInfo: LkdrApiClient.deviceInfo
+        deviceInfo: deviceInfo
       });
-
-      const data = challengeVerifyResponse?.data;
 
       console.log(JSON.stringify(data))
       const smsChallengeVerifyResponse = new SmsChallengeVerifyResponse(data);
@@ -51,7 +55,6 @@ class LkdrApiClient {
       alert("Could not auth")
     }
   }
-
   async init(): Promise<void> {
     this.authInProgress = true
     if (!this.authorized) {
@@ -106,27 +109,13 @@ class LkdrApiClient {
     })
   }
 
-  getUnauthorizedAxios(): AxiosInstance {
-    return axios.create({
-      baseURL: "https://lkdr.nalog.ru/"
-    })
-  }
-
   static create() {
-    return new LkdrApiClient();
+    return new Lkdr();
   }
 
-  private static deviceInfo = {
-    sourceDeviceId: "vpiiiB_crOBisv4cKpxyW",
-    sourceType: "WEB",
-    appVersion: "1.0.0",
-    metaDetails: {
-      userAgent: "Mozilla/5.0 AppleWebKit Chrome"
-    }
-  };
 
 }
 
-const lkdrApiClient = new LkdrApiClient()
+const lkdr = new Lkdr()
 
-export default lkdrApiClient
+export default lkdr

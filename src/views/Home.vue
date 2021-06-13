@@ -7,17 +7,18 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
-import lkdrApiClient from "@/apiclients/lkdr";
+import lkdr from "@/apiclients/lkdr";
 
 
 @Component<Home>({
   mounted: function () {
-    if (lkdrApiClient.getAuth()) {
+    lkdr.init()
+    if (lkdr.getAuth()) {
       this.loadPhone()
       this.loadStats()
     }
 
-    lkdrApiClient.onAuthStateChanged(auth => {
+    lkdr.onAuthStateChanged(auth => {
       if (!auth) return;
       this.loadPhone();
       this.loadStats();
@@ -28,14 +29,14 @@ export default class Home extends Vue {
   phone: string | null = null;
   stats: any = [];
 
-  loadPhone() {
-    lkdrApiClient.getAxios().get("/api/v1/user/profile")
+  loadPhone(): void {
+    lkdr.getAxios().get("/api/v1/user/profile")
       .then(response => response.data?.user?.taxpayerPerson?.phone)
       .then(phone => this.phone = phone)
   }
 
-  loadStats() {
-    let axios1 = lkdrApiClient.getAxios();
+  loadStats(): void {
+    let axios1 = lkdr.getAxios();
     axios1.post("/api/v1/receipt", {
       limit: 1000,
       offset: 0,
