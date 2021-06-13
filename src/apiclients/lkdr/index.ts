@@ -3,6 +3,7 @@ import SmsChallengeVerifyResponse from "@/apiclients/lkdr/SmsChallengeVerifyResp
 import lkdrLocalStorageRepository from "@/apiclients/lkdr/LkdrLocalStorageRepository";
 import LkdrUnauthorizedApiClient from "@/apiclients/lkdr/LkdrUnauthorizedApiClient";
 import {deviceInfo} from "@/apiclients/lkdr/LkdrApiClientCommons";
+import LkdrAuthorizedApiClient, {TaxpayerPerson} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 
 type AuthStateChangedCallback = (auth: any) => void;
 
@@ -15,6 +16,11 @@ class Lkdr {
   private onAuthStateChangedCallbacks: AuthStateChangedCallback[] = []
 
   private lkdrUnauthorizedApiClient = new LkdrUnauthorizedApiClient()
+
+  private get lkdrAuthorizedApiClient() {
+    if (!this.token) throw "Not authorized: No token present: Use auth method."
+    return new LkdrAuthorizedApiClient(this.token)
+  }
 
   async auth() {
     const phone = lkdrLocalStorageRepository.phone || prompt("Your number (79XXXXXXXXX)", "") || ""
@@ -70,9 +76,15 @@ class Lkdr {
     } else {
       return {
         token: this.token,
-        phone: lkdrLocalStorageRepository.phone
+        phone: lkdrLocalStorageRepository.phone,
+        taxpayerPerson: this.getTaxpayerPerson()
       }
     }
+  }
+
+  async getTaxpayerPerson(): Promise<TaxpayerPerson> {
+    const userProfileResponse = await this.lkdrAuthorizedApiClient.user.profile();
+    return userProfileResponse.user.taxpayerPerson
   }
 
   logout() {

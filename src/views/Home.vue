@@ -29,10 +29,8 @@ export default class Home extends Vue {
   phone: string | null = null;
   stats: any = [];
 
-  loadPhone(): void {
-    lkdr.getAxios().get("/api/v1/user/profile")
-      .then(response => response.data?.user?.taxpayerPerson?.phone)
-      .then(phone => this.phone = phone)
+  async loadPhone(): Promise<void> {
+    this.phone = (await lkdr.getTaxpayerPerson()).phone
   }
 
   loadStats(): void {
