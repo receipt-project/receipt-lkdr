@@ -1,12 +1,29 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Home</router-link> |
+      <router-link to="/heatmap">Heatmap</router-link>
+      |
+      <router-link to="/me">My Profile</router-link>
+      |
       <router-link to="/about">About</router-link>
     </div>
     <router-view/>
   </div>
 </template>
+
+
+<script lang="ts">
+import {Component, Vue} from 'vue-property-decorator';
+import lkdr from "@/apiclients/lkdr";
+
+@Component<App>({
+  mounted: function () {
+    lkdr.init()
+  }
+})
+export default class App extends Vue {
+}
+</script>
 
 <style lang="scss">
 #app {

@@ -1,6 +1,5 @@
 <template>
   <div class="home">
-    {{ phone }}
     <calendar-heatmap :values="stats" :end-date="new Date()" tooltip-unit="рублей"/>
   </div>
 </template>
@@ -9,29 +8,21 @@
 import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 
-
-@Component<Home>({
+@Component<Heatmap>({
   mounted: function () {
     lkdr.init()
     if (lkdr.getAuth()) {
-      this.loadPhone()
       this.loadStats()
     }
 
     lkdr.onAuthStateChanged(auth => {
       if (!auth) return;
-      this.loadPhone();
       this.loadStats();
     });
   }
 })
-export default class Home extends Vue {
-  phone: string | null = null;
+export default class Heatmap extends Vue {
   stats: any = [];
-
-  async loadPhone(): Promise<void> {
-    this.phone = (await lkdr.getTaxpayerPerson()).phone
-  }
 
   loadStats(): void {
     let axios1 = lkdr.getAxios();

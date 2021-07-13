@@ -1,14 +1,20 @@
 import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
-import Home from '../views/Home.vue'
+import Heatmap from '@/views/Heatmap.vue'
+import Me from "@/views/Me.vue"
 
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
-    path: '/',
-    name: 'Home',
-    component: Home
+    path: '/heatmap',
+    name: 'Heatmap',
+    component: Heatmap
+  },
+  {
+    path: '/me',
+    name: 'Me',
+    component: Me
   },
   {
     path: '/about',

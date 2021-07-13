@@ -68,6 +68,7 @@ class Lkdr {
     } else {
       // do nothing
     }
+    this.authInProgress = false
   }
 
   getAuth() {
