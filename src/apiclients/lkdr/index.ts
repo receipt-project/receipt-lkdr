@@ -62,7 +62,18 @@ class Lkdr {
     }
   }
   async init(): Promise<void> {
+    const refreshToken = lkdrLocalStorageRepository.refreshToken;
+    if (refreshToken!= null) {
+      const authTokenResponse = await this.lkdrUnauthorizedApiClient.auth.token({
+        refreshToken: refreshToken,
+        deviceInfo: deviceInfo
+      });
+      lkdrLocalStorageRepository.token = authTokenResponse.token
+      return;
+    }
+
     this.authInProgress = true
+
     if (!this.authorized) {
       await this.auth()
     } else {

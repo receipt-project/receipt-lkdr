@@ -20,7 +20,7 @@ export default class LkdrUnauthorizedApiClient {
       }
     },
     token: async (request: AuthTokenRequest): Promise<AuthTokenResponse> => {
-      const response = await this.webclient.post("/auth/challenge/token", request);
+      const response = await this.webclient.post("/auth/token", request);
       return response.data as AuthTokenResponse
     }
   }
