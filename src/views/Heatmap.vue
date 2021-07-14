@@ -1,12 +1,22 @@
 <template>
-  <div class="home">
-    <calendar-heatmap :values="stats" :end-date="new Date()" tooltip-unit="рублей"/>
+  <div>
+    <div class="home">
+      <calendar-heatmap :values="stats" :end-date="new Date()" tooltip-unit="рублей"/>
+    </div>
+    <table>
+      <tr v-for="receipt in receiptList" :key="receipt.key">
+        <td>{{ getBrandForReceipt(receipt) || receipt.kktOwner }}</td>
+        <td>{{ receipt.totalSum }}</td>
+        <td>{{ receipt.createdDate }}</td>
+      </tr>
+    </table>
   </div>
 </template>
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
+import {ReceiptResponseBrand, ReceiptResponseReceipt} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 
 @Component<Heatmap>({
   mounted: function () {
@@ -22,43 +32,46 @@ import lkdr from "@/apiclients/lkdr";
   }
 })
 export default class Heatmap extends Vue {
-  stats: any = [];
 
-  loadStats(): void {
-    let axios1 = lkdr.getAxios();
-    axios1.post("/api/v1/receipt", {
+  receiptList: ReceiptResponseReceipt[] = [];
+  brands: ReceiptResponseBrand[] = [];
+
+  getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
+    return (this.brands.find(it => it.id == receipt.brandId))?.name || null
+  }
+
+  get stats(): any[] {
+    const r1 = this.receiptList.map((receipt: any) => {
+      return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
+    })
+    let result: any = {};
+    for (let receipt of r1) {
+      let date = receipt.date;
+      if (!result[date]) {
+        result[date] = 0.0
+      }
+      result[date] += receipt.sum
+    }
+    let data = []
+    for (let date in result) {
+      // noinspection JSUnfilteredForInLoop
+      data.push({date: date, count: Math.floor(result[date])})
+    }
+    return data
+  }
+
+  async loadStats(): Promise<void> {
+    let data = await lkdr.lkdrAuthorizedApiClient.receipt({
       limit: 1000,
       offset: 0,
-      dateFrom: null,
+      dateFrom: "2020-07-01T00:00:00",
       dateTo: null,
       orderBy: "RECEIVE_DATE:DESC",
       inn: null
     })
-      .then(response => response.data)
-      .then(data => data?.receipts)
-      .then((receipts: any[]) => receipts.map((receipt: any) => {
-        return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
-      }))
-      .then((receipts: any[]) => {
-        let result: any = {};
-        for (let receipt of receipts) {
-          let date = receipt.date;
-          if (!result[date]) {
-            result[date] = 0.0
-          }
-          result[date] += receipt.sum
-        }
-        return result;
-      })
-      .then((stats: any) => {
-        let data = []
-        for (let date in stats) {
-          // noinspection JSUnfilteredForInLoop
-          data.push({date: date, count: Math.floor(stats[date])})
-        }
-        return data
-      })
-      .then(stats => this.stats = stats)
+
+    this.brands = data.brands
+    this.receiptList = (data.receipts).sort((a, b) => -a.createdDate.localeCompare(b.createdDate));
   }
 
 }

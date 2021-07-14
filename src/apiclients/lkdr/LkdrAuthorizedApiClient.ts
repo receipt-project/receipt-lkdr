@@ -21,6 +21,12 @@ export default class LkdrAuthorizedApiClient {
       return response.data as UserProfileResponse
     }
   }
+
+  async receipt(request: ReceiptRequest): Promise<ReceiptResponse> {
+    const response = await this.webclient.post("/receipt", request);
+    return response.data as ReceiptResponse
+  }
+
 }
 
 interface UserProfileResponse {
@@ -30,6 +36,42 @@ interface UserProfileResponse {
 interface UserProfileResponseUserField {
   taxpayerPerson: TaxpayerPerson
   authType: string | "SMS"
+}
+
+interface ReceiptRequest {
+  limit: number | null,
+  offset: number | null,
+  dateFrom: string | null,
+  dateTo: string | null,
+  orderBy: string | null,
+  inn: string | null
+}
+
+interface ReceiptResponse {
+  brands: ReceiptResponseBrand[]
+  hasMore: boolean
+  receipts: ReceiptResponseReceipt[]
+}
+
+export interface ReceiptResponseReceipt {
+  brandId: number
+  buyer: string
+  buyerType: string
+  createdDate: string
+  fiscalDocumentNumber: string
+  fiscalDriveNumber: string
+  key: string
+  kktOwner: string
+  kktOwnerInn: string
+  receiveDate: string
+  totalSum: string
+}
+
+export interface ReceiptResponseBrand {
+  description: string
+  id: number
+  image: string
+  name: string
 }
 
 export interface TaxpayerPerson {

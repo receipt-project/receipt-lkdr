@@ -17,7 +17,7 @@ class Lkdr {
 
   private lkdrUnauthorizedApiClient = new LkdrUnauthorizedApiClient()
 
-  private get lkdrAuthorizedApiClient() {
+  public get lkdrAuthorizedApiClient() {
     if (!this.token) throw "Not authorized: No token present: Use auth method."
     return new LkdrAuthorizedApiClient(this.token)
   }
@@ -55,7 +55,7 @@ class Lkdr {
       lkdrLocalStorageRepository.refreshToken = smsChallengeVerifyResponse.refreshToken;
 
       this.authorized = true
-      this.notifyAuthStateChanged()
+      await this.notifyAuthStateChanged()
     } catch (e) {
       console.error(e)
       alert("Could not auth")
@@ -82,14 +82,14 @@ class Lkdr {
     this.authInProgress = false
   }
 
-  getAuth() {
+  async getAuth() {
     if (!this.authorized) {
       return null;
     } else {
       return {
         token: this.token,
         phone: lkdrLocalStorageRepository.phone,
-        taxpayerPerson: this.getTaxpayerPerson()
+        taxpayerPerson: await this.getTaxpayerPerson()
       }
     }
   }
@@ -99,23 +99,23 @@ class Lkdr {
     return userProfileResponse.user.taxpayerPerson
   }
 
-  logout() {
+  async logout() {
     this.token = null
     lkdrLocalStorageRepository.token = null
     this.refreshToken = null
     lkdrLocalStorageRepository.refreshToken = null
     lkdrLocalStorageRepository.phone = null
-    this.notifyAuthStateChanged()
+    await this.notifyAuthStateChanged()
   }
 
   onAuthStateChanged(callback: AuthStateChangedCallback) {
     this.onAuthStateChangedCallbacks.push(callback)
   }
 
-  private notifyAuthStateChanged() {
+  private async notifyAuthStateChanged() {
     for (const onAuthStateChangedCallback of this.onAuthStateChangedCallbacks) {
       try {
-        onAuthStateChangedCallback(this.getAuth())
+        onAuthStateChangedCallback(await this.getAuth())
       } catch (e) {
         console.error(e);
       }
