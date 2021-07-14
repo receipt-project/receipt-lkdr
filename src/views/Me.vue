@@ -2,6 +2,7 @@
   <div>
     <span v-if="person">{{this.person.phone}}</span>
     <button @click="login">Login</button>
+    <button @click="logout">Logout</button>
   </div>
 </template>
 
@@ -12,7 +13,7 @@ import {TaxpayerPerson} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 
 @Component<Me>({
   mounted() {
-    lkdr.onAuthStateChanged(async auth => this.person = await auth.getTaxpayerPerson())
+    lkdr.onAuthStateChanged( auth => this.person = auth.taxpayerPerson)
   }
 })
 export default class Me extends Vue {
@@ -21,6 +22,10 @@ export default class Me extends Vue {
 
   login(): void {
     lkdr.auth()
+  }
+
+  logout(): void {
+    lkdr.logout()
   }
 
 }
