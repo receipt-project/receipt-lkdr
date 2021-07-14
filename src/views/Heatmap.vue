@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="home">
-      <calendar-heatmap :values="stats" :end-date="new Date()" tooltip-unit="рублей"/>
+      <calendar-heatmap :values="heatMapData" :end-date="new Date()" tooltip-unit="рублей"/>
+    </div>
+
+    <div>
+      <apexchart type="treemap" :options="{chart:{height: 500}}" :series="treemapData"></apexchart>
     </div>
     <table>
       <tr v-for="receipt in receiptList" :key="receipt.key">
@@ -10,6 +14,7 @@
         <td>{{ receipt.createdDate }}</td>
       </tr>
     </table>
+
   </div>
 </template>
 
@@ -32,15 +37,40 @@ import {ReceiptResponseBrand, ReceiptResponseReceipt} from "@/apiclients/lkdr/Lk
   }
 })
 export default class Heatmap extends Vue {
-
   receiptList: ReceiptResponseReceipt[] = [];
   brands: ReceiptResponseBrand[] = [];
+
+
+  series = [
+    {
+      data: [
+        {x: "New Delhi", y: 218,},
+        {x: "Kolkata", y: 149,},
+        {x: "Mumbai", y: 184,},
+        {
+          x: "Ahmedabad",
+          y: 55,
+        },
+        {
+          x: "Bangaluru",
+          y: 84,
+        },
+        {
+          x: "Pune",
+          y: 31,
+        },
+        {
+          x: "Chennai",
+          y: 70,
+        }
+      ]
+    }]
 
   getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
     return (this.brands.find(it => it.id == receipt.brandId))?.name || null
   }
 
-  get stats(): any[] {
+  get heatMapData(): any[] {
     const r1 = this.receiptList.map((receipt: any) => {
       return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
     })
@@ -58,6 +88,23 @@ export default class Heatmap extends Vue {
       data.push({date: date, count: Math.floor(result[date])})
     }
     return data
+  }
+
+  get treemapData(): any[] {
+    if (!this.receiptList) {
+      return []
+    }
+    let result: any = {};
+    this.receiptList.forEach(receipt => {
+      const brandName = this.getBrandForReceipt(receipt) || receipt.kktOwner;
+      result[brandName] = (result[brandName] || 0.0) + parseFloat(receipt.totalSum || "0.0");
+      console.log(brandName + " " + receipt.totalSum + " " + result[brandName])
+    })
+    let data = []
+    for (const [key, value] of Object.entries(result)) {
+      data.push({x: key, y: value});
+    }
+    return [{data}];
   }
 
   async loadStats(): Promise<void> {
