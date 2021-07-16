@@ -1,10 +1,12 @@
 <template>
   <div>
+    <DatesSelector @changed="dayTo = $event.dayTo; dayFrom=$event.dayFrom"/>
+
     <div class="home">
-      <calendar-heatmap :values="heatMapData" :end-date="new Date()" tooltip-unit="рублей"/>
+      <calendar-heatmap :values="heatMapData" :end-date="dayTo.toDate()" tooltip-unit="рублей"/>
     </div>
 
-    <TreemapChart :brands="brands" :receipt-list="receiptList"/>
+    <TreemapChart :brands="brands" :receipt-list="receiptListRanged"/>
 
     <table>
       <tr v-for="receipt in receiptList" :key="receipt.key">
@@ -22,9 +24,11 @@ import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 import {ReceiptResponseBrand, ReceiptResponseReceipt} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 import TreemapChart from "@/components/TreemapChart.vue";
+import DatesSelector from "@/components/DatesSelector.vue";
+import dayjs from "dayjs";
 
 @Component<Heatmap>({
-  components: {TreemapChart},
+  components: {DatesSelector, TreemapChart},
   mounted: function () {
     lkdr.init()
     if (lkdr.getAuth()) {
@@ -41,12 +45,23 @@ export default class Heatmap extends Vue {
   receiptList: ReceiptResponseReceipt[] = [];
   brands: ReceiptResponseBrand[] = [];
 
+  dayFrom = dayjs().year(dayjs().year() - 1);
+  dayTo = dayjs()
+
+  get receiptListRanged() {
+    return this.receiptList.filter(it => {
+      const date = dayjs(it.createdDate);
+      return (date.isBefore(this.dayTo) || date == this.dayTo) &&
+        (date.isAfter(this.dayFrom) || date == this.dayFrom);
+    })
+  }
+
   getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
     return (this.brands.find(it => it.id == receipt.brandId))?.name || null
   }
 
   get heatMapData(): any[] {
-    const r1 = this.receiptList.map((receipt: any) => {
+    const r1 = this.receiptListRanged.map((receipt: any) => {
       return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
     })
     let result: any = {};
@@ -63,23 +78,6 @@ export default class Heatmap extends Vue {
       data.push({date: date, count: Math.floor(result[date])})
     }
     return data
-  }
-
-  get treemapData(): any[] {
-    if (!this.receiptList) {
-      return []
-    }
-    let result: any = {};
-    this.receiptList.forEach(receipt => {
-      const brandName = this.getBrandForReceipt(receipt) || receipt.kktOwner;
-      result[brandName] = (result[brandName] || 0.0) + parseFloat(receipt.totalSum || "0.0");
-      console.log(brandName + " " + receipt.totalSum + " " + result[brandName])
-    })
-    let data = []
-    for (const [key, value] of Object.entries(result)) {
-      data.push({x: key, y: value});
-    }
-    return [{data}];
   }
 
   async loadStats(): Promise<void> {
