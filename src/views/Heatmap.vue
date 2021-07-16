@@ -4,9 +4,8 @@
       <calendar-heatmap :values="heatMapData" :end-date="new Date()" tooltip-unit="рублей"/>
     </div>
 
-    <div>
-      <apexchart type="treemap" :options="{chart:{height: 500}}" :series="treemapData"></apexchart>
-    </div>
+    <TreemapChart :brands="brands" :receipt-list="receiptList"/>
+
     <table>
       <tr v-for="receipt in receiptList" :key="receipt.key">
         <td>{{ getBrandForReceipt(receipt) || receipt.kktOwner }}</td>
@@ -22,8 +21,10 @@
 import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 import {ReceiptResponseBrand, ReceiptResponseReceipt} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
+import TreemapChart from "@/components/TreemapChart.vue";
 
 @Component<Heatmap>({
+  components: {TreemapChart},
   mounted: function () {
     lkdr.init()
     if (lkdr.getAuth()) {
@@ -39,32 +40,6 @@ import {ReceiptResponseBrand, ReceiptResponseReceipt} from "@/apiclients/lkdr/Lk
 export default class Heatmap extends Vue {
   receiptList: ReceiptResponseReceipt[] = [];
   brands: ReceiptResponseBrand[] = [];
-
-
-  series = [
-    {
-      data: [
-        {x: "New Delhi", y: 218,},
-        {x: "Kolkata", y: 149,},
-        {x: "Mumbai", y: 184,},
-        {
-          x: "Ahmedabad",
-          y: 55,
-        },
-        {
-          x: "Bangaluru",
-          y: 84,
-        },
-        {
-          x: "Pune",
-          y: 31,
-        },
-        {
-          x: "Chennai",
-          y: 70,
-        }
-      ]
-    }]
 
   getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
     return (this.brands.find(it => it.id == receipt.brandId))?.name || null
