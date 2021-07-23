@@ -69,11 +69,11 @@ export default class Heatmap extends Vue {
 
   get heatMapData(): any[] {
     const r1 = this.receiptListRanged.map((receipt: any) => {
-      return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
+      return {weekday: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
     })
     let result: any = {};
     for (let receipt of r1) {
-      let date = receipt.date;
+      let date = receipt.weekday;
       if (!result[date]) {
         result[date] = 0.0
       }
@@ -82,7 +82,7 @@ export default class Heatmap extends Vue {
     let data = []
     for (let date in result) {
       // noinspection JSUnfilteredForInLoop
-      data.push({date: date, count: Math.floor(result[date])})
+      data.push({weekday: date, count: Math.floor(result[date])})
     }
     return data
   }
