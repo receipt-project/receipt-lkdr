@@ -9,7 +9,8 @@
     <TreemapChart :brands="brands" :receipt-list="receiptListRanged"/>
 
     <table>
-      <tr v-for="receipt in receiptList" :key="receipt.key">
+      <tr v-for="receipt in receiptListRanged" :key="receipt.key">
+        <td><img class="receipt_list__brand_icon" :src="getBrandImageForReceipt(receipt)"></td>
         <td>{{ getBrandForReceipt(receipt) || receipt.kktOwner }}</td>
         <td>{{ receipt.totalSum }}</td>
         <td>{{ receipt.createdDate }}</td>
@@ -60,6 +61,12 @@ export default class Heatmap extends Vue {
     return (this.brands.find(it => it.id == receipt.brandId))?.name || null
   }
 
+  getBrandImageForReceipt(receipt: ReceiptResponseReceipt): string | null {
+    const image = (this.brands.find(it => it.id == receipt.brandId))?.image;
+    if (image == null) return null;
+    return "data:image/png;base64, " + image;
+  }
+
   get heatMapData(): any[] {
     const r1 = this.receiptListRanged.map((receipt: any) => {
       return {date: receipt.createdDate.substring(0, 10), sum: parseFloat(receipt.totalSum)}
@@ -96,3 +103,12 @@ export default class Heatmap extends Vue {
 
 }
 </script>
+
+<style>
+.receipt_list__brand_icon {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 50px;
+    height: 50px;
+}
+</style>
