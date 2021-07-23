@@ -49,7 +49,7 @@ export default class Heatmap extends Vue {
   dayFrom = dayjs().year(dayjs().year() - 1);
   dayTo = dayjs()
 
-  get receiptListRanged() {
+  get receiptListRanged(): ReceiptResponseReceipt[] {
     return this.receiptList.filter(it => {
       const date = dayjs(it.createdDate);
       return (date.isBefore(this.dayTo) || date == this.dayTo) &&
