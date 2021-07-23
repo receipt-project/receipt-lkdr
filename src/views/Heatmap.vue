@@ -2,7 +2,7 @@
   <div>
     <DatesSelector @changed="dayTo = $event.dayTo; dayFrom=$event.dayFrom"/>
 
-    <div class="home">
+    <div>
       <calendar-heatmap :values="heatMapData" :end-date="dayTo.toDate()" tooltip-unit="рублей"/>
     </div>
 
