@@ -15,7 +15,11 @@
       </div>
 
       <v-btn href="/" text>
-        <span class="mr-2">Home</span>
+        <span>Home</span>
+      </v-btn>
+
+      <v-btn href="/#/legal" text>
+        <span>Legal</span>
       </v-btn>
 
       <v-spacer></v-spacer>
