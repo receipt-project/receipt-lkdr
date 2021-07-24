@@ -82,7 +82,7 @@ export default class Heatmap extends Vue {
     let data = []
     for (let date in result) {
       // noinspection JSUnfilteredForInLoop
-      data.push({weekday: date, count: Math.floor(result[date])})
+      data.push({date: date, count: Math.floor(result[date])})
     }
     return data
   }
