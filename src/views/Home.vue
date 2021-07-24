@@ -51,7 +51,6 @@ import dayjs from "dayjs";
 @Component<Home>({
   components: {DatesSelector, TreemapChart},
   mounted: function () {
-    lkdr.init()
     if (lkdr.getAuth()) {
       this.loadStats()
     }
