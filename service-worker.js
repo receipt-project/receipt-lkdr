@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.8c8c2fe68668bf740424623e58d3fc58.js"
+  "/precache-manifest.6f8179eb4619dde9ccc2ea274524364d.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "receipt-lkdr"});
