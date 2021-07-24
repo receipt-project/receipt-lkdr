@@ -1,23 +1,43 @@
 <template>
-  <div>
-    <DatesSelector @changed="dayTo = $event.dayTo; dayFrom=$event.dayFrom"/>
-
-    <div>
-      <calendar-heatmap :values="heatMapData" :end-date="dayTo.toDate()" tooltip-unit="рублей"/>
-    </div>
-
-    <TreemapChart :brands="brands" :receipt-list="receiptListRanged"/>
-
-    <table>
-      <tr v-for="receipt in receiptListRanged" :key="receipt.key">
-        <td><img class="receipt_list__brand_icon" :src="getBrandImageForReceipt(receipt)"></td>
-        <td>{{ getBrandForReceipt(receipt) || receipt.kktOwner }}</td>
-        <td>{{ receipt.totalSum }}</td>
-        <td>{{ receipt.createdDate }}</td>
-      </tr>
-    </table>
-
-  </div>
+  <v-container>
+    <v-row>
+      <v-spacer/>
+      <v-col>
+        <DatesSelector class="my-2" @changed="dayTo = $event.dayTo; dayFrom=$event.dayFrom"/>
+      </v-col>
+      <v-spacer/>
+    </v-row>
+    <v-row>
+      <v-col>
+        <calendar-heatmap :values="heatMapData" :end-date="dayTo.toDate()" tooltip-unit="рублей"/>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <TreemapChart :brands="brands" :receipt-list="receiptListRanged"/>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <v-simple-table>
+          <template v-slot:default>
+            <tbody>
+            <tr v-for="receipt in receiptListRanged" :key="receipt.key">
+              <td>
+                <v-avatar tile>
+                  <img :src="getBrandImageForReceipt(receipt)">
+                </v-avatar>
+              </td>
+              <td>{{ getBrandForReceipt(receipt) || receipt.kktOwner }}</td>
+              <td>{{ receipt.totalSum }}</td>
+              <td>{{ receipt.createdDate }}</td>
+            </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -28,7 +48,7 @@ import TreemapChart from "@/components/TreemapChart.vue";
 import DatesSelector from "@/components/DatesSelector.vue";
 import dayjs from "dayjs";
 
-@Component<Heatmap>({
+@Component<Home>({
   components: {DatesSelector, TreemapChart},
   mounted: function () {
     lkdr.init()
@@ -42,7 +62,7 @@ import dayjs from "dayjs";
     });
   }
 })
-export default class Heatmap extends Vue {
+export default class Home extends Vue {
   receiptList: ReceiptResponseReceipt[] = [];
   brands: ReceiptResponseBrand[] = [];
 
@@ -103,12 +123,3 @@ export default class Heatmap extends Vue {
 
 }
 </script>
-
-<style>
-.receipt_list__brand_icon {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 50px;
-    height: 50px;
-}
-</style>
