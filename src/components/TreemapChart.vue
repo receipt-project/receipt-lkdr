@@ -1,6 +1,6 @@
 <template>
   <div>
-      <apexchart type="treemap" :options="{chart:{height: 500}}" :series="treemapData"></apexchart>
+      <apexchart type="treemap" :options="options" :series="treemapData"></apexchart>
   </div>
 </template>
 
@@ -16,20 +16,43 @@ export default class TreemapChart extends Vue {
   @Prop()
   brands: ReceiptResponseBrand[] = [];
 
+  readonly options: any = {
+    chart: {
+      height: 500,
+      events: {
+        click: (event: any, chartContext: any, config: any) => {
+          this.click(config);
+        }
+      }
+    }
+  }
+
+  private click(config: any) {
+    const series = this.treemapData[config.seriesIndex];
+    const dataItem = series.data[config.dataPointIndex];
+    const brandId = this.getBrandIdByName(dataItem.x);
+    this.$emit("clickOnBrand", brandId)
+  }
+
   getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
     return (this.brands.find(it => it.id == receipt.brandId))?.name || null
   }
 
-  get treemapData(): any[] {
+  getBrandIdByName(brandName: string) : number | null {
+    const find = this.brands.find(it => it.name == brandName) || null;
+    return find?.id || null
+  }
+
+  get treemapData(): { data: { x: string, y: number }[] }[] {
     if (!this.receiptList) return [];
 
-    let companyToAmountMap: any = {};
+    let companyToAmountMap: { [id: string] : number; } = {};
     this.receiptList.forEach(receipt => {
       const brandName = this.getBrandForReceipt(receipt) || receipt.kktOwner;
       companyToAmountMap[brandName] = (companyToAmountMap[brandName] || 0.0) + parseFloat(receipt.totalSum || "0.0");
     })
 
-    let data = []
+    let data: {x: string, y: number}[] = []
     for (const [key, value] of Object.entries(companyToAmountMap)) {
       data.push({x: key, y: value});
     }

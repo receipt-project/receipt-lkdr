@@ -14,7 +14,7 @@
     </v-row>
     <v-row>
       <v-col>
-        <TreemapChart :brands="brands" :receipt-list="receiptListRanged"/>
+        <TreemapChart :brands="brands" :receipt-list="receiptListRanged" @clickOnBrand="selectBrand($event)"/>
       </v-col>
     </v-row>
     <v-row>
@@ -67,13 +67,22 @@ export default class Home extends Vue {
 
   dayFrom = dayjs().year(dayjs().year() - 1);
   dayTo = dayjs()
+  brandsSelected: number[] = [];
 
   get receiptListRanged(): ReceiptResponseReceipt[] {
-    return this.receiptList.filter(it => {
-      const date = dayjs(it.createdDate);
-      return (date.isBefore(this.dayTo) || date == this.dayTo) &&
-        (date.isAfter(this.dayFrom) || date == this.dayFrom);
-    })
+    return this.receiptList
+      .filter(it => {
+        const date = dayjs(it.createdDate);
+        return (date.isBefore(this.dayTo) || date == this.dayTo) &&
+          (date.isAfter(this.dayFrom) || date == this.dayFrom);
+      })
+      .filter(it => {
+        if (!!this.brandsSelected && this.brandsSelected.length > 0) {
+          return !!this.brandsSelected.find(brandId => it.brandId === brandId)
+        } else {
+          return true;
+        }
+      })
   }
 
   getBrandForReceipt(receipt: ReceiptResponseReceipt): string | null {
@@ -104,6 +113,10 @@ export default class Home extends Vue {
       data.push({date: date, count: Math.floor(result[date])})
     }
     return data
+  }
+
+  selectBrand(brandId: number) {
+    this.brandsSelected = [brandId];
   }
 
   async loadStats(): Promise<void> {
