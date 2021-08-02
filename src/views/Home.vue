@@ -9,6 +9,13 @@
     </v-row>
     <v-row>
       <v-col>
+        <v-select v-model="brandsSelected" :items="brands" item-text="name"
+          return-object="true" label="Магазины" chips clearable multiple outlined
+        />
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
         <calendar-heatmap :values="heatMapData" :end-date="dayTo.toDate()" tooltip-unit="рублей"/>
       </v-col>
     </v-row>
@@ -67,7 +74,7 @@ export default class Home extends Vue {
 
   dayFrom = dayjs().year(dayjs().year() - 1);
   dayTo = dayjs()
-  brandsSelected: number[] = [];
+  brandsSelected: ReceiptResponseBrand[] = [];
 
   get receiptListRanged(): ReceiptResponseReceipt[] {
     return this.receiptList
@@ -78,7 +85,7 @@ export default class Home extends Vue {
       })
       .filter(it => {
         if (!!this.brandsSelected && this.brandsSelected.length > 0) {
-          return !!this.brandsSelected.find(brandId => it.brandId === brandId)
+          return !!this.brandsSelected.find(brand => it.brandId === brand.id)
         } else {
           return true;
         }
@@ -116,7 +123,8 @@ export default class Home extends Vue {
   }
 
   selectBrand(brandId: number) {
-    this.brandsSelected = [brandId];
+    const selectedBrand = this.brands.find(brand => brand.id === brandId);
+    this.brandsSelected = selectedBrand ? [selectedBrand] : [];
   }
 
   async loadStats(): Promise<void> {
