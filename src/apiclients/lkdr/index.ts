@@ -1,32 +1,52 @@
-import axios, {AxiosInstance} from "axios";
 import SmsChallengeVerifyResponse from "@/apiclients/lkdr/SmsChallengeVerifyResponse";
 import lkdrLocalStorageRepository from "@/apiclients/lkdr/LkdrLocalStorageRepository";
 import LkdrUnauthorizedApiClient from "@/apiclients/lkdr/LkdrUnauthorizedApiClient";
 import {deviceInfo} from "@/apiclients/lkdr/LkdrApiClientCommons";
 import LkdrAuthorizedApiClient, {TaxpayerPerson} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 
-type AuthStateChangedCallback = (auth: any) => void;
+type AuthStateChangedCallback = (auth: any | null) => void;
 
 class Lkdr {
 
-  private token: string | null = lkdrLocalStorageRepository.token
+  private _tokenPromise!: Promise<string>
+
+  private get tokenPromise(): Promise<string> {
+    return this._tokenPromise
+  }
+
+  private set tokenPromise(tokenPromise: Promise<string>) {
+    this._tokenPromise = tokenPromise
+    this.notifyAuthStateChanged()
+  }
+
   private refreshToken: string | null = lkdrLocalStorageRepository.refreshToken
-  private authorized = !!this.token && !!this.refreshToken;
-  private authInProgress = false;
   private onAuthStateChangedCallbacks: AuthStateChangedCallback[] = []
 
   private lkdrUnauthorizedApiClient = new LkdrUnauthorizedApiClient()
 
   public get lkdrAuthorizedApiClient() {
-    if (!this.token) throw "Not authorized: No token present: Use auth method."
-    return new LkdrAuthorizedApiClient(this.token)
+    return new LkdrAuthorizedApiClient(this.tokenPromise)
   }
 
-  async auth() {
+  constructor() {
+    const refreshToken = lkdrLocalStorageRepository.refreshToken;
+    if (refreshToken != null) {
+      this.tokenPromise = this.lkdrUnauthorizedApiClient.auth
+        .token({
+          refreshToken: refreshToken,
+          deviceInfo: deviceInfo
+        })
+        .then(authTokenResponse => authTokenResponse.token)
+    } else {
+      this.tokenPromise = this.auth()
+    }
+  }
+
+  async auth(): Promise<string> {
     const phone = lkdrLocalStorageRepository.phone || prompt("Your number (79XXXXXXXXX)", "") || ""
 
     if (!phone) {
-      return
+      throw "No phone number provided"
     }
 
     lkdrLocalStorageRepository.phone = phone;
@@ -36,7 +56,7 @@ class Lkdr {
     const challengeToken = challengeStartResponse.challengeToken;
 
     const code: string | null = prompt("SMS Code")
-    if (!code) return
+    if (!code) throw "No sms code provided"
 
     try {
       const data = await this.lkdrUnauthorizedApiClient.auth.challenge.sms.verify({
@@ -49,59 +69,39 @@ class Lkdr {
       console.log(JSON.stringify(data))
       const smsChallengeVerifyResponse = new SmsChallengeVerifyResponse(data);
 
-      this.token = smsChallengeVerifyResponse.token;
-      lkdrLocalStorageRepository.token = smsChallengeVerifyResponse.token;
       this.refreshToken = smsChallengeVerifyResponse.refreshToken;
       lkdrLocalStorageRepository.refreshToken = smsChallengeVerifyResponse.refreshToken;
 
-      this.authorized = true
-      await this.notifyAuthStateChanged()
+      return smsChallengeVerifyResponse.token
     } catch (e) {
       console.error(e)
       alert("Could not auth")
+      return Promise.reject("Could not auth")
     }
   }
-  async init(): Promise<void> {
-    const refreshToken = lkdrLocalStorageRepository.refreshToken;
-    if (refreshToken!= null) {
-      const authTokenResponse = await this.lkdrUnauthorizedApiClient.auth.token({
-        refreshToken: refreshToken,
-        deviceInfo: deviceInfo
-      });
-      lkdrLocalStorageRepository.token = authTokenResponse.token
-      return;
+  async getAuth(): Promise<AuthInfo | null> {
+    let token = null;
+    if (this.tokenPromise) {
+      token = await this.tokenPromise.catch(() => null);
     }
 
-    this.authInProgress = true
-
-    if (!this.authorized) {
-      await this.auth()
-    } else {
-      // do nothing
-    }
-    this.authInProgress = false
-  }
-
-  async getAuth() {
-    if (!this.authorized) {
+    if (!token) {
       return null;
-    } else {
-      return {
-        token: this.token,
-        phone: lkdrLocalStorageRepository.phone,
-        taxpayerPerson: await this.getTaxpayerPerson()
-      }
+    }
+
+    return {
+      token: token,
+      phone: lkdrLocalStorageRepository.phone,
+      taxpayerPerson: await this.getTaxpayerPerson()
     }
   }
-
   async getTaxpayerPerson(): Promise<TaxpayerPerson> {
     const userProfileResponse = await this.lkdrAuthorizedApiClient.user.profile();
     return userProfileResponse.user.taxpayerPerson
   }
 
   async logout() {
-    this.token = null
-    lkdrLocalStorageRepository.token = null
+    this.tokenPromise = Promise.reject("Unauthorized")
     this.refreshToken = null
     lkdrLocalStorageRepository.refreshToken = null
     lkdrLocalStorageRepository.phone = null
@@ -122,24 +122,18 @@ class Lkdr {
     }
   }
 
-  getAxios(): AxiosInstance {
-    if (!this.token) throw "Not authorized: No token present: Use init method."
-
-    return axios.create({
-      baseURL: "https://lkdr.nalog.ru/",
-      headers: {
-        "Authorization": "Bearer " + this.token
-      }
-    })
-  }
-
   static create() {
     return new Lkdr();
   }
-
 
 }
 
 const lkdr = new Lkdr()
 
 export default lkdr
+
+export interface AuthInfo {
+  token: string
+  phone: string | null
+  taxpayerPerson: TaxpayerPerson
+}

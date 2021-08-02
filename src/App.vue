@@ -45,11 +45,7 @@
 import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 
-@Component<App>({
-  mounted: function () {
-    lkdr.init()
-  }
-})
+@Component<App>({})
 export default class App extends Vue {
 }
 </script>

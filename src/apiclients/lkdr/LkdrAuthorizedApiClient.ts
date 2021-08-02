@@ -2,36 +2,41 @@ import axios, {AxiosInstance} from "axios";
 
 export default class LkdrAuthorizedApiClient {
 
-  private readonly token: string
-  private readonly webclient: AxiosInstance
+  private readonly tokenPromise: Promise<string>
+  private readonly webclient: Promise<AxiosInstance>
 
-  constructor(token: string) {
-    this.token = token
-    this.webclient = axios.create({
-      baseURL: "https://lkdr.nalog.ru/api/v1",
-      headers: {
-        "Authorization": "Bearer " + this.token
-      }
+  constructor(tokenPromise: Promise<string>) {
+    this.tokenPromise = tokenPromise;
+
+    this.webclient = this.tokenPromise.then(token => {
+      return axios.create({
+        baseURL: "https://lkdr.nalog.ru/api/v1",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
     })
   }
 
   user = {
     profile: async (): Promise<UserProfileResponse> => {
-      const response = await this.webclient.get("/user/profile")
+      const webclient = await this.webclient;
+      const response = await webclient.get("/user/profile")
       return response.data as UserProfileResponse
     }
   }
 
   async receipt(request: ReceiptRequest): Promise<ReceiptResponse> {
-    const response = await this.webclient.post("/receipt", request);
+    const webclient = await this.webclient
+    const response = await webclient.post("/receipt", request);
     return response.data as ReceiptResponse
   }
 
   async scan(request: ScanRequest): Promise<ScanResponse> {
-    const response = await this.webclient.post("/scan", request)
+    const webclient = await this.webclient
+    const response = await webclient.post("/scan", request)
     return response.data as ScanResponse
   }
-
 
 }
 

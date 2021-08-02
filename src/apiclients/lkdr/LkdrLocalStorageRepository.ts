@@ -9,14 +9,6 @@ class LkdrLocalStorageRepository {
     LkdrLocalStorageRepository.setValueOrClear(phone, "lkdr.phone");
   }
 
-  public get token(): string | null {
-    return localStorage.getItem("lkdr.token");
-  }
-
-  public set token(token: string | null) {
-    LkdrLocalStorageRepository.setValueOrClear(token, "lkdr.token");
-  }
-
   public get refreshToken(): string | null {
     return localStorage.getItem("lkdr.refreshToken");
   }
