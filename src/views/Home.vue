@@ -10,7 +10,7 @@
     <v-row>
       <v-col>
         <v-select v-model="brandsSelected" :items="brands" item-text="name"
-          return-object="true" label="Магазины" chips clearable multiple outlined
+          label="Магазины" return-object chips clearable multiple outlined
         />
       </v-col>
     </v-row>
