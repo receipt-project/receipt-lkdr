@@ -14,15 +14,25 @@
         <v-toolbar-title class="mx-2">LKDR</v-toolbar-title>
       </div>
 
-      <v-btn href="/" text>
-        <span>Home</span>
-      </v-btn>
+      <router-link to="/" v-slot="{ href }" custom>
+        <v-btn :href="href" text>
+          <span>Home</span>
+        </v-btn>
+      </router-link>
 
-      <v-btn href="/#/legal" text>
-        <span>Legal</span>
-      </v-btn>
+      <router-link to="/me" v-slot="{ href }" custom>
+        <v-btn :href="href" text>
+          <span>Me</span>
+        </v-btn>
+      </router-link>
 
-      <v-spacer></v-spacer>
+      <router-link to="/legal" v-slot="{ href }" custom>
+        <v-btn :href="href" text>
+          <span>Legal</span>
+        </v-btn>
+      </router-link>
+
+      <v-spacer/>
 
       <v-btn
         href="https://github.com/receipt-project/receipt-lkdr"
