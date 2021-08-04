@@ -20,14 +20,12 @@ import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 import {TaxpayerPerson} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
 
-@Component<Me>({
-  mounted() {
-    lkdr.onAuthStateChanged( auth => this.person = auth.taxpayerPerson)
-  }
-})
+@Component<Me>({})
 export default class Me extends Vue {
 
-  person: TaxpayerPerson | null = null
+  get person(): TaxpayerPerson | null {
+    return this.$store.state.lkdr.userProfile
+  }
 
   login(): void {
     lkdr.doAuth()

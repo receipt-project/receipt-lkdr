@@ -55,7 +55,13 @@
 import {Component, Vue} from 'vue-property-decorator';
 import lkdr from "@/apiclients/lkdr";
 
-@Component<App>({})
+@Component<App>({
+  mounted() {
+    lkdr.onAuthStateChanged(it => {
+      this.$store.commit("lkdr/setUserProfile", it)
+    })
+  }
+})
 export default class App extends Vue {
 }
 </script>
