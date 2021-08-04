@@ -9,6 +9,7 @@ require("@/plugins/vue-apexcharts")
 require("@/plugins/dayjs")
 require("@/plugins/vue2-datepicker")
 require("@/plugins/vue-calendar-heatmap")
+require("@/plugins/lkdr")
 
 Vue.config.productionTip = false
 

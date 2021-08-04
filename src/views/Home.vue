@@ -128,7 +128,7 @@ export default class Home extends Vue {
   }
 
   async loadStats(): Promise<void> {
-    let data = await lkdr.lkdrAuthorizedApiClient.receipt({
+    let data = await lkdr.api.receipt({
       limit: 1000,
       offset: 0,
       dateFrom: "2020-07-01T00:00:00",

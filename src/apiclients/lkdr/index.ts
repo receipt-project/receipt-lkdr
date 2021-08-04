@@ -1,8 +1,8 @@
-import SmsChallengeVerifyResponse from "@/apiclients/lkdr/SmsChallengeVerifyResponse";
 import lkdrLocalStorageRepository from "@/apiclients/lkdr/LkdrLocalStorageRepository";
 import LkdrUnauthorizedApiClient from "@/apiclients/lkdr/LkdrUnauthorizedApiClient";
 import {deviceInfo} from "@/apiclients/lkdr/LkdrApiClientCommons";
 import LkdrAuthorizedApiClient, {TaxpayerPerson} from "@/apiclients/lkdr/LkdrAuthorizedApiClient";
+import LkdrAuthorizer from "@/apiclients/lkdr/LkdrAuthorizer";
 
 type AuthStateChangedCallback = (auth: any | null) => void;
 
@@ -24,7 +24,7 @@ class Lkdr {
 
   private lkdrUnauthorizedApiClient = new LkdrUnauthorizedApiClient()
 
-  public get lkdrAuthorizedApiClient() {
+  public get api() {
     return new LkdrAuthorizedApiClient(this.tokenPromise)
   }
 
@@ -38,49 +38,24 @@ class Lkdr {
         })
         .then(authTokenResponse => authTokenResponse.token)
     } else {
-      this.tokenPromise = this.auth()
+      this.tokenPromise = Promise.reject()
     }
   }
 
-  async auth(): Promise<string> {
-    const phone = lkdrLocalStorageRepository.phone || prompt("Your number (79XXXXXXXXX)", "") || ""
-
-    if (!phone) {
-      throw "No phone number provided"
-    }
-
-    lkdrLocalStorageRepository.phone = phone;
-
-    const challengeStartResponse = await this.lkdrUnauthorizedApiClient.auth.challenge.sms.start({phone})
-
-    const challengeToken = challengeStartResponse.challengeToken;
-
-    const code: string | null = prompt("SMS Code")
-    if (!code) throw "No sms code provided"
-
-    try {
-      const data = await this.lkdrUnauthorizedApiClient.auth.challenge.sms.verify({
-        challengeToken: challengeToken,
-        phone: phone,
-        code: code,
-        deviceInfo: deviceInfo
+  public doAuth() {
+    return new LkdrAuthorizer((authPromise => {
+      return this.tokenPromise = authPromise.then(it => {
+        this.refreshToken = it.refreshToken
+        lkdrLocalStorageRepository.refreshToken = it.refreshToken
+        console.log(this.refreshToken)
+        return it.token;
       });
-
-      console.log(JSON.stringify(data))
-      const smsChallengeVerifyResponse = new SmsChallengeVerifyResponse(data);
-
-      this.refreshToken = smsChallengeVerifyResponse.refreshToken;
-      lkdrLocalStorageRepository.refreshToken = smsChallengeVerifyResponse.refreshToken;
-
-      return smsChallengeVerifyResponse.token
-    } catch (e) {
-      console.error(e)
-      alert("Could not auth")
-      return Promise.reject("Could not auth")
-    }
+    }))
   }
+
   async getAuth(): Promise<AuthInfo | null> {
     let token = null;
+    console.log(this.tokenPromise)
     if (this.tokenPromise) {
       token = await this.tokenPromise.catch(() => null);
     }
@@ -95,8 +70,9 @@ class Lkdr {
       taxpayerPerson: await this.getTaxpayerPerson()
     }
   }
-  async getTaxpayerPerson(): Promise<TaxpayerPerson> {
-    const userProfileResponse = await this.lkdrAuthorizedApiClient.user.profile();
+
+  private async getTaxpayerPerson(): Promise<TaxpayerPerson> {
+    const userProfileResponse = await this.api.user.profile();
     return userProfileResponse.user.taxpayerPerson
   }
 

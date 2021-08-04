@@ -21,7 +21,9 @@ export default class Me extends Vue {
   person: TaxpayerPerson | null = null
 
   login(): void {
-    lkdr.auth()
+    lkdr.doAuth()
+      .auth(prompt("Your number (79XXXXXXXXX)", "") || "")
+      .otp(() => prompt("SMS Code", "") || "")
   }
 
   logout(): void {

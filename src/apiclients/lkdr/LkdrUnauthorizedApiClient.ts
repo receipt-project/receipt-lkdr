@@ -1,5 +1,9 @@
 import axios, {AxiosInstance} from "axios";
 
+export const exceptions = {
+  "CODE_ALREADY_SENT": "CODE_ALREADY_SENT"
+}
+
 export default class LkdrUnauthorizedApiClient {
 
   private webclient: AxiosInstance = axios.create({
@@ -11,6 +15,15 @@ export default class LkdrUnauthorizedApiClient {
       sms: {
         start: async (request: AuthChallengeSmsStartRequest): Promise<AuthChallengeSmsStartResponse> => {
           const response = await this.webclient.post("/auth/challenge/sms/start", request)
+            .catch(error => {
+              const response = error.response
+              if (response.status === 422) {
+                if (response.data.code == "registration.sms.verification.not.expired") {
+                  throw exceptions.CODE_ALREADY_SENT
+                }
+              }
+              return Promise.reject(error);
+            })
           return response.data as AuthChallengeSmsStartResponse
         },
         verify: async (request: AuthChallengeSmsVerifyRequest): Promise<AuthChallengeSmsVerifyResponse> => {
@@ -46,18 +59,18 @@ interface AuthChallengeSmsVerifyRequest {
   deviceInfo: any
 }
 
-interface AuthChallengeSmsVerifyResponse {
-  challengeToken: string
-  phone: string
-  code: string
-  deviceInfo: any
+export interface AuthChallengeSmsVerifyResponse {
+  refreshToken: string
+  refreshTokenExpiresIn: string | null
+  token: string
+  tokenExpireIn: string
 }
 
 interface AuthChallengeSmsStartRequest {
   phone: string
 }
 
-interface AuthChallengeSmsStartResponse {
+export interface AuthChallengeSmsStartResponse {
   challengeToken: string
 }
 
