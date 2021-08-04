@@ -86,6 +86,7 @@ class Lkdr {
 
   onAuthStateChanged(callback: AuthStateChangedCallback) {
     this.onAuthStateChangedCallbacks.push(callback)
+    this.getAuth().then(auth => callback(auth));
   }
 
   private async notifyAuthStateChanged() {
