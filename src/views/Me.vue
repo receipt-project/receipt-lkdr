@@ -1,8 +1,17 @@
 <template>
   <div>
-    <span v-if="person">{{this.person.phone}}</span>
-    <button @click="login">Login</button>
-    <button @click="logout">Logout</button>
+    <div class="row mt-3">
+      <div class="col">
+        <span v-if="person">{{ this.person.phone }}</span>
+        <span v-else>Unauthorized</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <v-btn v-if="!person" @click="login">Login</v-btn>
+        <v-btn v-else @click="logout">Logout</v-btn>
+      </div>
+    </div>
   </div>
 </template>
 
